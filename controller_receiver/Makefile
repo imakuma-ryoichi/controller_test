@@ -1,21 +1,24 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2 -Iinclude
-LDFLAGS := -lbluetooth
+LDLIBS := -lbluetooth -pthread
 
 TARGET := build/controller_receiver
 
-SOURCES := \
-	src/main.cpp \
-	src/wifi_receiver.cpp \
-	src/bluetooth_receiver.cpp
+SOURCES := $(wildcard src/*.cpp)
+OBJECTS := $(SOURCES:src/%.cpp=build/%.o)
 
-.PHONY: all run clean
+.PHONY: all clean run
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCES)
-	mkdir -p build
-	$(CXX) $(CXXFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS)
+$(TARGET): $(OBJECTS)
+	mkdir -p $(dir $@)
+	$(CXX) $(OBJECTS) -o $@ $(LDLIBS)
+	chmod +x $@
+
+build/%.o: src/%.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: $(TARGET)
 	./$(TARGET)
