@@ -1,8 +1,8 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2
 
-TARGET := controller_sender
-SOURCE := src/controller_sender.cpp
+TARGET := build/controller_sender
+SOURCE := src/main.cpp
 
 .PHONY: all run clean
 
