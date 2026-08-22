@@ -5,6 +5,6 @@
 
 struct ControllerData
 {
-    std::array<int32_t, 6> axes{};
-    std::array<int32_t, 7> buttons{};
+    std::array<int32_t, 8> axes{};
+    std::array<int32_t, 13> buttons{};
 };
