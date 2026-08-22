@@ -94,6 +94,7 @@ class BridgeNode(Node):
         self.declare_parameter('wifi_port', 9999)
         self.declare_parameter('bt_addr', '00:11:22:33:44:55')
         self.declare_parameter('bt_port', 1)
+        self.declare_parameter('publish_rate', 50.0)
         self.declare_parameter('fallback_latency_threshold_ms', 200)
 
         self.publisher_ = self.create_publisher(Joy, 'ps5/joy', 10)
@@ -114,8 +115,10 @@ class BridgeNode(Node):
         self.wifi_receiver.start()
         self.bt_receiver.start()
 
-        self.timer = self.create_timer(0.02, self.process)  # 50 Hz
-        self.get_logger().info('Bridge node started, using Wi‑Fi as primary channel')
+        rate = self.get_parameter('publish_rate').get_parameter_value().double_value
+        timer_period = 1.0 / rate if rate > 0 else 0.02
+        self.timer = self.create_timer(timer_period, self.process)
+        self.get_logger().info(f'Bridge node started at {rate} Hz, using Wi‑Fi as primary channel')
 
     def process(self):
         # Drain queue, keep most recent message per source

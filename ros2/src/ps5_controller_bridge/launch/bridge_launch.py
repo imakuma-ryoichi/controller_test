@@ -17,6 +17,7 @@ def generate_launch_description():
                     'wifi_port': int(os.getenv('WIFI_PORT', '9999')),
                     'bt_addr': os.getenv('BT_ADDR', '00:11:22:33:44:55'),
                     'bt_port': int(os.getenv('BT_PORT', '1')),
+                    'publish_rate': float(os.getenv('PUBLISH_RATE', '50.0')),
                 }
             ],
         ),

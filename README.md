@@ -58,35 +58,40 @@ cd /home/user/controller-rox/ros2
 colcon build --packages-select ps5_controller_bridge
 source install/setup.bash
 
-# ブリッジノードの起動
+# ブリッジノードの起動 (デフォルト 50Hz)
 ros2 launch ps5_controller_bridge bridge_launch.py
+
+# 100Hz で動作させる場合 (ROSパラメータまたは環境変数で指定)
+ros2 run ps5_controller_bridge bridge_node --ros-args -p publish_rate:=100.0
+# または launch 経由 (環境変数 PUBLISH_RATE を使用)
+PUBLISH_RATE=100.0 ros2 launch ps5_controller_bridge bridge_launch.py
 ```
 
-受信待機設定のパラメータ（IP, ポート, BT MACアドレス）は launch 引数または環境変数で変更可能です。
+受信待機設定のパラメータ（IP, ポート, BT MACアドレス, `publish_rate`）は ROSパラメータまたは環境変数で変更可能です。
 
 ---
 
 ### 2. Sender 側の起動
 
-コントローラーが接続された端末で実行します。
+コントローラーが接続された端末で実行します（100Hzで送信する場合は `--rate 100` を付与）。
 
 #### Wi-Fi (UDP) 送信:
 ```bash
 cd /home/user/controller-rox/controller_sender/python
 
-# 通常起動 (受信機のIPアドレスを指定)
-python3 wifi_sender.py --host <RECEIVER_IP> --port 9999
+# 通常起動 (受信機のIPアドレスを指定, 例: 100Hz)
+python3 wifi_sender.py --host <RECEIVER_IP> --port 9999 --rate 100
 
 # コントローラー実機なしのテスト (モック送信)
-python3 wifi_sender.py --host 127.0.0.1 --port 9999 --mock
+python3 wifi_sender.py --host 127.0.0.1 --port 9999 --mock --rate 100
 ```
 
 #### Bluetooth (RFCOMM) 送信:
 ```bash
 cd /home/user/controller-rox/controller_sender/python
 
-# 受信機の Bluetooth MAC アドレスを指定
-python3 bt_sender.py --addr <RECEIVER_BT_MAC> --port 1
+# 受信機の Bluetooth MAC アドレスを指定 (例: 100Hz)
+python3 bt_sender.py --addr <RECEIVER_BT_MAC> --port 1 --rate 100
 ```
 
 ---
