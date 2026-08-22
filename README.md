@@ -284,13 +284,13 @@ DualSenseのスティック、トリガー、ボタンなどを操作し、入�
 
 # Senderのネットワーク設定
 
-ReceiverのIPアドレスをSenderに設定する。
+ReceiverのIPアドレスをSenderの`config/controller_connection.yaml`に設定する。
 
 例：
 
     192.168.1.100
 
-UDPポートは5000を使用する。
+Senderの`wifi.port`とReceiverの`wifi.port`を同じ値（既定値は5000）に設定する。
 
 ---
 

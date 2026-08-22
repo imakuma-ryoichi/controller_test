@@ -1,7 +1,9 @@
 #include <unistd.h>
 
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "bluetooth_sender.hpp"
 #include "connection_config.hpp"
@@ -48,27 +50,36 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    const int bluetooth_fd =
-        connect_bluetooth(config.bluetooth_address.c_str(), config.bluetooth_channel);
-
-    if (bluetooth_fd < 0) {
-        close(wifi_fd);
-        close(controller_fd);
-        return 1;
-    }
+    int bluetooth_fd = -1;
 
     ControllerData data{};
 
     while (true) {
+        if (bluetooth_fd < 0) {
+            bluetooth_fd =
+                connect_bluetooth(config.bluetooth_address.c_str(), config.bluetooth_channel);
+            if (bluetooth_fd < 0) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        }
+
         if (update_controller(controller_fd, mapping, data)) {
-            send_wifi(wifi_fd, data);
-            send_bluetooth(bluetooth_fd, data);
+            if (!send_wifi(wifi_fd, data)) {
+                std::cerr << "Wi-Fiデータの送信に失敗しました\n";
+            }
+            if (bluetooth_fd >= 0 && !send_bluetooth(bluetooth_fd, data)) {
+                std::cerr << "Bluetooth切断を検出しました。再接続します\n";
+                close(bluetooth_fd);
+                bluetooth_fd = -1;
+            }
         }
 
         usleep(1000);
     }
 
-    close(bluetooth_fd);
+    if (bluetooth_fd >= 0) {
+        close(bluetooth_fd);
+    }
     close(wifi_fd);
     close(controller_fd);
 

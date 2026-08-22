@@ -37,12 +37,13 @@ int create_wifi_sender(const char* ip, uint16_t port)
         return -1;
     }
 
+    std::cout << "Wi-Fi送信先: UDP/" << ip << ':' << port << '\n';
     return socket_fd;
 }
 
 bool send_wifi(int socket_fd, const ControllerData& data)
 {
     const auto* bytes = reinterpret_cast<const char*>(&data);
-    const ssize_t size = send(socket_fd, bytes, sizeof(data), 0);
+    const ssize_t size = send(socket_fd, bytes, sizeof(data), MSG_NOSIGNAL);
     return size == static_cast<ssize_t>(sizeof(data));
 }

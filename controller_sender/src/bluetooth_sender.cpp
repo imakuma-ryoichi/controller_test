@@ -51,7 +51,7 @@ bool send_bluetooth(int socket_fd, const ControllerData& data)
         socket_fd,
         &data,
         sizeof(data),
-        0);
+        MSG_NOSIGNAL);
 
     return size == sizeof(data);
 }
