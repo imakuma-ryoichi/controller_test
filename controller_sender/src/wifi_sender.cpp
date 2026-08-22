@@ -1,25 +1,22 @@
 #include "wifi_sender.hpp"
 
 #include <arpa/inet.h>
+#include <cerrno>
+#include <cstring>
+#include <iostream>
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <iostream>
-
-namespace
-{
-sockaddr_in receiver{};
-}
-
 int create_wifi_sender(const char* ip, uint16_t port)
 {
-    const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    const int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket_fd < 0) {
         std::cerr << "Wi-Fi Socketの作成に失敗しました\n";
         return -1;
     }
 
+    sockaddr_in receiver{};
     receiver.sin_family = AF_INET;
     receiver.sin_port = htons(port);
 
@@ -29,18 +26,38 @@ int create_wifi_sender(const char* ip, uint16_t port)
         return -1;
     }
 
+    if (connect(
+        socket_fd,
+        reinterpret_cast<sockaddr*>(&receiver),
+        sizeof(receiver)) < 0)
+    {
+        std::cerr << "Wi-Fi接続に失敗しました: "
+                  << std::strerror(errno) << '\n';
+        close(socket_fd);
+        return -1;
+    }
+
     return socket_fd;
 }
 
 bool send_wifi(int socket_fd, const ControllerData& data)
 {
-    const ssize_t size = sendto(
-        socket_fd,
-        &data,
-        sizeof(data),
-        0,
-        reinterpret_cast<sockaddr*>(&receiver),
-        sizeof(receiver));
+    const auto* bytes = reinterpret_cast<const char*>(&data);
+    std::size_t sent = 0;
 
-    return size == sizeof(data);
+    while (sent < sizeof(data)) {
+        const ssize_t size = send(
+            socket_fd,
+            bytes + sent,
+            sizeof(data) - sent,
+            0);
+
+        if (size <= 0) {
+            return false;
+        }
+
+        sent += static_cast<std::size_t>(size);
+    }
+
+    return true;
 }

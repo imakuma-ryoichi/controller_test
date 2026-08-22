@@ -26,7 +26,7 @@ ReceiverではWi-FiおよびBluetoothからデータを受信し、最終的にR
       ┌───┴───┐
       ↓       ↓
     Wi-Fi   Bluetooth
-      UDP     RFCOMM
+      TCP     RFCOMM
       ↓       ↓
       └───┬───┘
           ↓
@@ -157,15 +157,15 @@ ControllerDataにはコントローラーの13入力の現在状態を保持す�
 
 ## Wi-Fi
 
-User Datagram Protocolを使用する。
+TCPを使用する。
 
     Sender
       ↓
-    UDP
+    TCP
       ↓
     Receiver
 
-UDPポート：
+TCPポート：
 
     5000
 
@@ -290,7 +290,7 @@ ReceiverのIPアドレスをSenderに設定する。
 
     192.168.1.100
 
-UDPポートは5000を使用する。
+TCPポートは5000を使用する。
 
 ---
 
@@ -448,7 +448,7 @@ DualSenseを操作し、Receiver側でControllerDataを受信できることを�
         ↓
     Sender
         ↓
-    UDP
+    TCP
         ↓
     Receiver
 
@@ -487,7 +487,7 @@ Wi-FiとBluetoothをそれぞれ単独で確認した後、両方を同時に動
     DualSense
         ↓
     Sender
-        ├── Wi-Fi UDP ────────→ Receiver
+        ├── Wi-Fi TCP ────────→ Receiver
         └── Bluetooth RFCOMM ─→ Receiver
 
 両方からControllerDataを受信できることを確認する。
@@ -646,7 +646,7 @@ Receiver側で必要に応じて以下を行う。
           ├──────────────┐
           ↓              ↓
         Wi-Fi        Bluetooth
-         UDP           RFCOMM
+         TCP           RFCOMM
           ↓              ↓
           └───────┬──────┘
                   ↓
