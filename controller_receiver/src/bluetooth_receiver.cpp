@@ -24,7 +24,6 @@ void receive_bluetooth()
 
     sockaddr_rc address{};
     address.rc_family = AF_BLUETOOTH;
-    address.rc_bdaddr = *BDADDR_ANY;
     address.rc_channel = CHANNEL;
 
     if (bind(
