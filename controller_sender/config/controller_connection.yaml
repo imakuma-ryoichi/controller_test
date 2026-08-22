@@ -2,9 +2,11 @@ controller:
   device: "/dev/input/js0"
 
 wifi:
+  enabled: true
   address: "192.168.1.100"
   port: 5000
 
 bluetooth:
+  enabled: false
   address: "XX:XX:XX:XX:XX:XX"
   channel: 1

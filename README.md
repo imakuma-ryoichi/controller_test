@@ -81,6 +81,16 @@ Senderの送信先IP、ポート、入力デバイス：
 controller_sender/config/controller_connection.yaml
 ```
 
+使わない通信はOFFにする。Raspberry Pi 5からWi-Fiだけで送るなら、BluetoothはOFF推奨。
+
+```yaml
+wifi:
+  enabled: true
+
+bluetooth:
+  enabled: false
+```
+
 Senderのボタン/軸割り当て、タッチパッド、送信周期：
 
 ```text
@@ -93,6 +103,13 @@ controller_sender/config/controller_id.yaml
 send_rate_hz: 10
 ```
 
+タッチパッドを使わないなら、evdev探索と読み取りを止める。
+
+```yaml
+touchpad:
+  enabled: false
+```
+
 Receiverの待受UDPポート、Bluetooth RFCOMMチャンネル：
 
 ```text
@@ -103,6 +120,13 @@ ROS 2側でWi-Fi/Bluetoothの優先順と無通信タイムアウトを変える
 
 ```text
 ros2/config/comm_config.yaml
+```
+
+RDK側を軽くしたい場合は、ROS 2のpoll周期を下げ、新規パケットが来たときだけPublishする。
+
+```yaml
+poll_rate_hz: 50
+publish_on_new_data_only: true
 ```
 
 # システム構成

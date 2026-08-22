@@ -1,5 +1,6 @@
 #include "controller_id.hpp"
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -25,6 +26,31 @@ std::string trim(const std::string& value)
     }
     const auto last = value.find_last_not_of(" \t\r");
     return value.substr(first, last - first + 1);
+}
+
+bool parse_bool(const std::string& value, bool& result)
+{
+    std::string normalized;
+    normalized.reserve(value.size());
+    for (const char c : value) {
+        normalized.push_back(static_cast<char>(
+            std::tolower(static_cast<unsigned char>(c))));
+    }
+
+    if (normalized == "true" || normalized == "yes" ||
+        normalized == "on" || normalized == "1")
+    {
+        result = true;
+        return true;
+    }
+    if (normalized == "false" || normalized == "no" ||
+        normalized == "off" || normalized == "0")
+    {
+        result = false;
+        return true;
+    }
+
+    return false;
 }
 
 } // namespace
@@ -124,6 +150,19 @@ bool load_controller_mapping(const char* path, ControllerMapping& mapping)
             return false;
         }
         mapping.button_events[index] = static_cast<uint8_t>(number);
+    }
+
+    const auto touchpad_enabled_it = values.find("touchpad.enabled");
+    if (touchpad_enabled_it != values.end() &&
+        !parse_bool(touchpad_enabled_it->second, mapping.touchpad_enabled))
+    {
+        std::cerr << "controller_id.yamlのtouchpad.enabledが不正です: "
+                  << touchpad_enabled_it->second << '\n';
+        return false;
+    }
+
+    if (!mapping.touchpad_enabled) {
+        return true;
     }
 
     const auto touchpad_device_it = values.find("touchpad.event_device");

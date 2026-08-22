@@ -245,7 +245,7 @@ public:
 
         publisher_ = create_publisher<sensor_msgs::msg::Joy>("/controller/joy", 10);
         timer_ = create_wall_timer(
-            std::chrono::milliseconds(10),
+            comm_manager_->poll_period(),
             std::bind(&JoyPublisherNode::loop, this));
     }
 
@@ -260,13 +260,17 @@ private:
     void loop()
     {
         ControllerData data{};
+        bool received_wifi = false;
+        bool received_bluetooth = false;
 
         if (receive_wifi(data)) {
+            received_wifi = true;
             latest_wifi_data_ = data;
             wifi_last_seen_ = CommManager::Clock::now();
         }
 
         if (receive_bluetooth(data)) {
+            received_bluetooth = true;
             latest_bluetooth_data_ = data;
             bluetooth_last_seen_ = CommManager::Clock::now();
         }
@@ -292,6 +296,16 @@ private:
 
         if (selected_data == nullptr) {
             return;
+        }
+
+        if (comm_manager_->publish_on_new_data_only()) {
+            const bool selected_channel_updated =
+                (*selected == CommManager::Channel::WiFi && received_wifi) ||
+                (*selected == CommManager::Channel::Bluetooth && received_bluetooth);
+
+            if (!selected_channel_updated) {
+                return;
+            }
         }
 
         publish_joy(*selected_data);

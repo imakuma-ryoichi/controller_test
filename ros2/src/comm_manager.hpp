@@ -24,6 +24,9 @@ public:
         const std::optional<TimePoint>& wifi_last_seen,
         const std::optional<TimePoint>& bluetooth_last_seen) const;
 
+    std::chrono::milliseconds poll_period() const;
+    bool publish_on_new_data_only() const;
+
     static const char* channel_name(Channel channel);
 
 private:
@@ -33,4 +36,6 @@ private:
 
     std::vector<Channel> priority_;
     std::chrono::milliseconds stale_timeout_{200};
+    std::chrono::milliseconds poll_period_{20};
+    bool publish_on_new_data_only_{true};
 };

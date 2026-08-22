@@ -26,6 +26,7 @@ button:
 
 # Touchpad click is read from evdev because it may not exist in /dev/input/js0.
 touchpad:
+  enabled: true
   event_device: /dev/input/event11
   button_code: 272 # BTN_LEFT (EV_KEY)
 
