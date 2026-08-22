@@ -2,6 +2,7 @@
 #include "controller_data.hpp"
 
 #include <arpa/inet.h>
+#include <cerrno>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -66,14 +67,31 @@ void receive_wifi()
 
         while (true) {
             ControllerData data{};
+            auto* bytes = reinterpret_cast<char*>(&data);
+            std::size_t received = 0;
 
-            const ssize_t size = recv(
-                client_fd,
-                &data,
-                sizeof(data),
-                MSG_WAITALL);
+            while (received < sizeof(data)) {
+                const ssize_t size = recv(
+                    client_fd,
+                    bytes + received,
+                    sizeof(data) - received,
+                    0);
 
-            if (size != sizeof(data)) {
+                if (size == 0) {
+                    break;
+                }
+
+                if (size < 0) {
+                    if (errno == EINTR) {
+                        continue;
+                    }
+                    break;
+                }
+
+                received += static_cast<std::size_t>(size);
+            }
+
+            if (received != sizeof(data)) {
                 break;
             }
 
