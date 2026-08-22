@@ -23,3 +23,8 @@ button:
   ps: 10
   left_stick: 11
   right_stick: 12
+
+# Touchpad press is read from evdev because it may not exist in /dev/input/js0.
+touchpad:
+  event_device: /dev/input/event11
+  button_code: 330

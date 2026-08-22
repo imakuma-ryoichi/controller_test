@@ -33,10 +33,16 @@ int main(int argc, char* argv[])
     if (controller_fd < 0) {
         return 1;
     }
+    const int touchpad_fd = open_touchpad_event(mapping.touchpad_event_device.c_str());
+    if (touchpad_fd < 0) {
+        close(controller_fd);
+        return 1;
+    }
 
     const int wifi_fd = create_wifi_sender(wifi_address, wifi_port);
 
     if (wifi_fd < 0) {
+        close(touchpad_fd);
         close(controller_fd);
         return 1;
     }
@@ -46,6 +52,7 @@ int main(int argc, char* argv[])
 
     if (bluetooth_fd < 0) {
         close(wifi_fd);
+        close(touchpad_fd);
         close(controller_fd);
         return 1;
     }
@@ -53,7 +60,13 @@ int main(int argc, char* argv[])
     ControllerData data{};
 
     while (true) {
-        if (update_controller(controller_fd, mapping, data)) {
+        const bool joystick_updated = update_controller(controller_fd, mapping, data);
+        const bool touchpad_updated = update_touchpad_event(
+            touchpad_fd,
+            mapping.touchpad_button_code,
+            data);
+
+        if (joystick_updated || touchpad_updated) {
             send_wifi(wifi_fd, data);
             send_bluetooth(bluetooth_fd, data);
         }
@@ -63,6 +76,7 @@ int main(int argc, char* argv[])
 
     close(bluetooth_fd);
     close(wifi_fd);
+    close(touchpad_fd);
     close(controller_fd);
 
     return 0;
