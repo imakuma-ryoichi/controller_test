@@ -8,6 +8,103 @@ ReceiverではWi-FiおよびBluetoothからデータを受信し、最終的にR
 
 ---
 
+# 最初に見るところ
+
+## 全体の流れ
+
+    Controller
+        ↓
+    Sender
+        ↓ Wi-Fi UDP / Bluetooth RFCOMM
+    Receiver / ROS 2
+        ↓
+    /controller/joy
+
+## Receiver / ROS 2側の起動
+
+Receiver側PCで実行する。
+
+```bash
+cd ~/controller_test
+git pull
+source /opt/ros/humble/setup.bash
+make receiver-ros2
+make launch
+```
+
+`make launch`で`ros2/build/joy_publisher`が起動し、`/controller/joy`へ`sensor_msgs/msg/Joy`をPublishする。
+
+トピック確認：
+
+```bash
+ros2 topic list
+ros2 topic echo /controller/joy
+```
+
+ビルドが怪しいときは一度cleanする。
+
+```bash
+make -C ros2 clean
+make receiver-ros2
+```
+
+## Sender側の起動
+
+Sender側PCで実行する。
+
+```bash
+cd ~/controller_test/controller_sender
+make
+./build/controller_sender
+```
+
+Makefile経由で起動する場合：
+
+```bash
+cd ~/controller_test/controller_sender
+make run
+```
+
+設定ファイルを明示する場合：
+
+```bash
+./build/controller_sender \
+  --config config/controller_id.yaml \
+  --connection-config config/controller_connection.yaml
+```
+
+## よく触る設定
+
+Senderの送信先IP、ポート、入力デバイス：
+
+```text
+controller_sender/config/controller_connection.yaml
+```
+
+Senderのボタン/軸割り当て、タッチパッド、送信周期：
+
+```text
+controller_sender/config/controller_id.yaml
+```
+
+送信周期を遅くしてデバッグする例：
+
+```yaml
+send_rate_hz: 10
+```
+
+Receiverの待受UDPポート、Bluetooth RFCOMMチャンネル：
+
+```text
+controller_receiver/config/receiver_connection.yaml
+```
+
+ROS 2側でWi-Fi/Bluetoothの優先順と無通信タイムアウトを変える設定：
+
+```text
+ros2/config/comm_config.yaml
+```
+
 # システム構成
 
     対応コントローラー（例: PS5 DualSense Controller）
