@@ -1,7 +1,8 @@
-#include <unistd.h>
-
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
+#include <unistd.h>
 
 #include "bluetooth_sender.hpp"
 #include "controller_input.hpp"
@@ -52,13 +53,17 @@ int main(int argc, char* argv[])
 
     ControllerData data{};
 
-    while (true) {
-        if (update_controller(controller_fd, mapping, data)) {
-            send_wifi(wifi_fd, data);
-            send_bluetooth(bluetooth_fd, data);
-        }
+    const auto period = std::chrono::nanoseconds(1'000'000'000 / mapping.send_rate_hz);
+    auto next_tick = std::chrono::steady_clock::now();
 
-        usleep(1000);
+    while (true) {
+        update_controller(controller_fd, mapping, data);
+
+        send_wifi(wifi_fd, data);
+        send_bluetooth(bluetooth_fd, data);
+
+        next_tick += period;
+        std::this_thread::sleep_until(next_tick);
     }
 
     close(bluetooth_fd);
@@ -67,3 +72,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+

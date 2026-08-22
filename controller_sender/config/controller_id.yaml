@@ -23,3 +23,6 @@ button:
   ps: 10
   left_stick: 11
   right_stick: 12
+
+# Periodic transmission rate in Hz (default: 100)
+send_rate_hz: 100
