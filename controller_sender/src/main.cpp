@@ -4,31 +4,38 @@
 #include <string>
 
 #include "bluetooth_sender.hpp"
+#include "connection_config.hpp"
 #include "controller_input.hpp"
 #include "wifi_sender.hpp"
 
 int main(int argc, char* argv[])
 {
-    const char* config_path = "config/controller_id.yaml";
-    if (argc == 3 && std::string(argv[1]) == "--config") {
-        config_path = argv[2];
-    } else if (argc != 1) {
-        std::cerr << "使い方: controller_sender [--config path]\n";
-        return 1;
+    const char* mapping_config_path = "config/controller_id.yaml";
+    const char* connection_config_path = "config/controller_connection.yaml";
+
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--config" && i + 1 < argc) {
+            mapping_config_path = argv[++i];
+        } else if (arg == "--connection-config" && i + 1 < argc) {
+            connection_config_path = argv[++i];
+        } else {
+            std::cerr << "使い方: controller_sender [--config mapping_path] [--connection-config connection_path]\n";
+            return 1;
+        }
     }
 
     ControllerMapping mapping{};
-    if (!load_controller_mapping(config_path, mapping)) {
+    if (!load_controller_mapping(mapping_config_path, mapping)) {
         return 1;
     }
 
-    constexpr const char* controller_device = "/dev/input/js0";
-    constexpr const char* wifi_address = "192.168.1.100";
-    constexpr uint16_t wifi_port = 5000;
-    constexpr const char* bluetooth_address = "XX:XX:XX:XX:XX:XX";
-    constexpr uint8_t bluetooth_channel = 1;
+    ConnectionConfig config{};
+    if (!load_connection_config(connection_config_path, config)) {
+        return 1;
+    }
 
-    const int controller_fd = open_controller(controller_device);
+    const int controller_fd = open_controller(config.controller_device.c_str());
 
     if (controller_fd < 0) {
         return 1;
@@ -41,7 +48,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    const int wifi_fd = create_wifi_sender(wifi_address, wifi_port);
+    const int wifi_fd = create_wifi_sender(config.wifi_address.c_str(), config.wifi_port);
 
     if (wifi_fd < 0) {
         close(touchpad_fd);
@@ -50,7 +57,7 @@ int main(int argc, char* argv[])
     }
 
     const int bluetooth_fd =
-        connect_bluetooth(bluetooth_address, bluetooth_channel);
+        connect_bluetooth(config.bluetooth_address.c_str(), config.bluetooth_channel);
 
     if (bluetooth_fd < 0) {
         close(wifi_fd);

@@ -10,11 +10,9 @@
 #include <iostream>
 #include <string>
 
-void receive_wifi()
+void receive_wifi(uint16_t port)
 {
-    constexpr uint16_t PORT = 5000;
-
-    const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    const int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket_fd < 0) {
         std::cerr << "Wi-Fi Socketの作成に失敗しました\n";
@@ -37,7 +35,7 @@ void receive_wifi()
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(port);
 
     if (bind(
         socket_fd,
@@ -49,7 +47,13 @@ void receive_wifi()
         return;
     }
 
-    std::cout << "Wi-Fi受信待機中: UDP/" << PORT << '\n';
+    if (listen(socket_fd, 1) < 0) {
+        std::cerr << "Wi-Fiのlistenに失敗しました\n";
+        close(socket_fd);
+        return;
+    }
+
+    std::cout << "Wi-Fi受信待機中: TCP/" << port << '\n';
 
     while (true) {
         ControllerData data{};
