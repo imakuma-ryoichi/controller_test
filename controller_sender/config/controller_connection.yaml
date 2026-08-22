@@ -1,0 +1,10 @@
+controller:
+  device: "/dev/input/js0"
+
+wifi:
+  address: "192.168.1.100"
+  port: 5000
+
+bluetooth:
+  address: "XX:XX:XX:XX:XX:XX"
+  channel: 1

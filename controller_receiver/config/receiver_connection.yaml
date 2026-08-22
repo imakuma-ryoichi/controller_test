@@ -1,0 +1,5 @@
+wifi:
+  port: 5000
+
+bluetooth:
+  channel: 1

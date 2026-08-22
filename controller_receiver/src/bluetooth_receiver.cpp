@@ -8,10 +8,8 @@
 
 #include <iostream>
 
-void receive_bluetooth()
+void receive_bluetooth(uint8_t channel)
 {
-    constexpr uint8_t CHANNEL = 1;
-
     const int socket_fd = socket(
         AF_BLUETOOTH,
         SOCK_STREAM,
@@ -24,7 +22,7 @@ void receive_bluetooth()
 
     sockaddr_rc address{};
     address.rc_family = AF_BLUETOOTH;
-    address.rc_channel = CHANNEL;
+    address.rc_channel = channel;
 
     if (bind(
         socket_fd,
@@ -44,7 +42,7 @@ void receive_bluetooth()
 
     std::cout
         << "Bluetooth受信待機中: RFCOMM/"
-        << static_cast<int>(CHANNEL)
+        << static_cast<int>(channel)
         << '\n';
 
     while (true) {

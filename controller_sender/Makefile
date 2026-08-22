@@ -25,6 +25,7 @@ run: $(TARGET)
 install: $(TARGET)
 	install -D -m 755 $(TARGET) /usr/local/bin/controller_sender
 	install -D -m 644 config/controller_id.yaml /etc/controller_sender/controller_id.yaml
+	install -D -m 644 config/controller_connection.yaml /etc/controller_sender/controller_connection.yaml
 
 clean:
 	rm -rf build

@@ -8,10 +8,8 @@
 #include <cstdint>
 #include <iostream>
 
-void receive_wifi()
+void receive_wifi(uint16_t port)
 {
-    constexpr uint16_t PORT = 5000;
-
     const int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket_fd < 0) {
@@ -35,7 +33,7 @@ void receive_wifi()
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(port);
 
     if (bind(
         socket_fd,
@@ -53,7 +51,7 @@ void receive_wifi()
         return;
     }
 
-    std::cout << "Wi-Fi受信待機中: TCP/" << PORT << '\n';
+    std::cout << "Wi-Fi受信待機中: TCP/" << port << '\n';
 
     while (true) {
         const int client_fd = accept(socket_fd, nullptr, nullptr);
