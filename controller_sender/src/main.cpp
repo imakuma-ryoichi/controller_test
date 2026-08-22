@@ -68,40 +68,46 @@ int main(int argc, char* argv[])
 
     ControllerData data{};
 
+    const auto period =
+        std::chrono::nanoseconds(1'000'000'000 / mapping.send_rate_hz);
+    auto next_tick = std::chrono::steady_clock::now();
+    auto next_bluetooth_retry = next_tick;
+
     while (true) {
-        if (bluetooth_fd < 0) {
+        const auto now = std::chrono::steady_clock::now();
+
+        if (bluetooth_fd < 0 && now >= next_bluetooth_retry) {
             bluetooth_fd =
                 connect_bluetooth(
                     config.bluetooth_address.c_str(),
                     config.bluetooth_channel);
 
-            if (bluetooth_fd < 0) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-            }
+            next_bluetooth_retry = now + std::chrono::seconds(1);
         }
 
-        if (update_controller(controller_fd, mapping, data)) {
-            update_touchpad_event(
-                touchpad_fd,
-                mapping.touchpad_button_code,
-                data);
+        update_controller(controller_fd, mapping, data);
+        update_touchpad_event(
+            touchpad_fd,
+            mapping.touchpad_button_code,
+            data);
 
-            if (!send_wifi(wifi_fd, data)) {
-                std::cerr << "Wi-Fiデータの送信に失敗しました\n";
-            }
-
-            if (bluetooth_fd >= 0 && !send_bluetooth(bluetooth_fd, data)) {
-                std::cerr << "Bluetooth切断を検出しました。再接続します\n";
-                close(bluetooth_fd);
-                bluetooth_fd = -1;
-            }
+        if (!send_wifi(wifi_fd, data)) {
+            std::cerr << "Wi-Fiデータの送信に失敗しました\n";
         }
 
-        usleep(10000);
-    }
+        if (bluetooth_fd >= 0 && !send_bluetooth(bluetooth_fd, data)) {
+            std::cerr << "Bluetooth切断を検出しました。再接続します\n";
+            close(bluetooth_fd);
+            bluetooth_fd = -1;
+            next_bluetooth_retry = now;
+        }
 
-    if (bluetooth_fd >= 0) {
-        close(bluetooth_fd);
+        next_tick += period;
+        const auto after_work = std::chrono::steady_clock::now();
+        if (next_tick < after_work) {
+            next_tick = after_work + period;
+        }
+        std::this_thread::sleep_until(next_tick);
     }
 
     close(wifi_fd);

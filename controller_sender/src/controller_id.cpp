@@ -62,6 +62,24 @@ bool load_controller_mapping(const char* path, ControllerMapping& mapping)
             section = key;
             continue;
         }
+
+        if (section.empty() || key == "send_rate_hz") {
+            if (key == "send_rate_hz") {
+                try {
+                    size_t parsed = 0;
+                    unsigned long rate = std::stoul(value, &parsed);
+                    if (parsed != value.size() || rate == 0 || rate > 10000) {
+                        throw std::out_of_range("send_rate_hz");
+                    }
+                    mapping.send_rate_hz = static_cast<uint32_t>(rate);
+                } catch (const std::exception&) {
+                    std::cerr << "controller_id.yamlのsend_rate_hzが不正です: " << value << '\n';
+                    return false;
+                }
+                continue;
+            }
+        }
+
         if (section != "axis" && section != "button" && section != "touchpad") {
             std::cerr << "controller_id.yamlのセクションが不正です: "
                       << section << '\n';
