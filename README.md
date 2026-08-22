@@ -1,6 +1,6 @@
-# Controller Bridge System (PS5 DualSense / Wi-Fi UDP & Bluetooth RFCOMM)
+# Controller Bridge System 
 
-PS5 コントローラーからの入力を **Wi-Fi (UDP)** および **Bluetooth (RFCOMM)** 経由で受信し、**ROS 2 (`sensor_msgs/msg/Joy`)** トピック `/ps5/joy` に自動優先・フォールバック制御してパブリッシュするシステムです。
+コントローラーからの入力を **Wi-Fi (UDP)** および **Bluetooth (RFCOMM)** 経由で受信し、**ROS 2 (`sensor_msgs/msg/Joy`)** トピック `/ps5/joy` に自動優先・フォールバック制御してパブリッシュするシステムです。
 
 ---
 
@@ -25,8 +25,8 @@ PS5 コントローラーからの入力を **Wi-Fi (UDP)** および **Bluetoot
 ## リポジトリ構成
 
 - **`controller_sender/`** : コントローラー接続側（送信機 PC / Raspberry Pi など）
-  - `python/wifi_sender.py` : PS5 の入力を UDP で送信
-  - `python/bt_sender.py` : PS5 の入力を Bluetooth (RFCOMM) で送信
+  - `python/wifi_sender.py` : 入力を UDP で送信
+  - `python/bt_sender.py` : の入力を Bluetooth (RFCOMM) で送信
   - `systemd/` : 常駐化用サービス設定
 - **`ros2/`** : ROS 2 受信・ブリッジパッケージ
   - `src/ps5_controller_bridge/` : 受信 ROS 2 ノード（Wi-Fi UDP & Bluetooth 受信、優先度切り替え、Joy パブリッシュ）
