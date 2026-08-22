@@ -2,6 +2,7 @@
 #include "wifi_sender.hpp"
 #include "bluetooth_sender.hpp"
 
+#include <unistd.h>
 #include <chrono>
 #include <iostream>
 #include <thread>
