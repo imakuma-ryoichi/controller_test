@@ -1,46 +1,48 @@
 #include <unistd.h>
 
+#include "bluetooth_sender.hpp"
 #include "controller_input.hpp"
 #include "wifi_sender.hpp"
-#include "bluetooth_sender.hpp"
 
 int main()
 {
-    const int controller_fd = open_controller();
+    constexpr const char* controller_device = "/dev/input/js0";
+    constexpr const char* wifi_address = "192.168.1.100";
+    constexpr uint16_t wifi_port = 12345;
+    constexpr const char* bluetooth_address = "XX:XX:XX:XX:XX:XX";
+    constexpr uint8_t bluetooth_channel = 1;
 
-    if (controller_fd < 0)
-    {
+    const int controller_fd = open_controller(controller_device);
+
+    if (controller_fd < 0) {
         return 1;
     }
 
-    const int wifi_fd = create_wifi_sender("192.168.1.100", 12345);
+    const int wifi_fd = create_wifi_sender(wifi_address, wifi_port);
 
-    if (wifi_fd < 0)
-    {
+    if (wifi_fd < 0) {
         close(controller_fd);
         return 1;
     }
 
-    const int bluetooth_fd = connect_bluetooth("XX:XX:XX:XX:XX:XX", 1);
+    const int bluetooth_fd =
+        connect_bluetooth(bluetooth_address, bluetooth_channel);
 
-    if (bluetooth_fd < 0)
-    {
+    if (bluetooth_fd < 0) {
         close(wifi_fd);
         close(controller_fd);
         return 1;
     }
 
-    while (true)
-    {
-        ControllerData data{};
+    ControllerData data{};
 
-        if (!open_controller(controller_fd, data))
-        {
-            break;
+    while (true) {
+        if (update_controller(controller_fd, data)) {
+            send_wifi(wifi_fd, data);
+            send_bluetooth(bluetooth_fd, data);
         }
 
-        send_wifi(wifi_fd, data);
-        send_bluetooth(bluetooth_fd, data);
+        usleep(1000);
     }
 
     close(bluetooth_fd);
