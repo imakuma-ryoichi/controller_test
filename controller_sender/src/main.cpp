@@ -1,6 +1,6 @@
 #include <unistd.h>
 
-#include "controller.hpp"
+#include "controller_input.hpp"
 #include "wifi_sender.hpp"
 #include "bluetooth_sender.hpp"
 
