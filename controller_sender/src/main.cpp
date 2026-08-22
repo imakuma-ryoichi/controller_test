@@ -8,7 +8,7 @@ int main()
 {
     constexpr const char* controller_device = "/dev/input/js0";
     constexpr const char* wifi_address = "192.168.1.100";
-    constexpr uint16_t wifi_port = 12345;
+    constexpr uint16_t wifi_port = 5000;
     constexpr const char* bluetooth_address = "XX:XX:XX:XX:XX:XX";
     constexpr uint8_t bluetooth_channel = 1;
 

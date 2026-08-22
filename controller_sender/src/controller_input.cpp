@@ -8,6 +8,13 @@
 #include <cstring>
 #include <iostream>
 
+namespace
+{
+constexpr uint8_t X_AXIS = 0;
+constexpr uint8_t Y_AXIS = 1;
+constexpr uint8_t ROTATION_AXIS = 2;
+}
+
 int open_controller(const char* device)
 {
     const int fd = open(device, O_RDONLY | O_NONBLOCK);
@@ -30,16 +37,21 @@ bool update_controller(int controller_fd, ControllerData& data)
 
         switch (event.type) {
         case JS_EVENT_AXIS:
-            if (event.number < data.axes.size()) {
-                data.axes[event.number] = event.value;
+            switch (event.number) {
+            case X_AXIS:
+                data.x = event.value;
                 updated = true;
-            }
-            break;
-
-        case JS_EVENT_BUTTON:
-            if (event.number < data.buttons.size()) {
-                data.buttons[event.number] = static_cast<uint8_t>(event.value);
+                break;
+            case Y_AXIS:
+                data.y = event.value;
                 updated = true;
+                break;
+            case ROTATION_AXIS:
+                data.rotation = event.value;
+                updated = true;
+                break;
+            default:
+                break;
             }
             break;
 
