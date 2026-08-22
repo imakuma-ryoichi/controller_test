@@ -10,7 +10,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 
-# Simple receiver for Wi‑Fi (TCP)
+# UDP receiver for Wi‑Fi (UDP)
 class WifiReceiver(threading.Thread):
     def __init__(self, host: str, port: int, out_queue: queue.Queue):
         super().__init__(daemon=True)
@@ -19,28 +19,33 @@ class WifiReceiver(threading.Thread):
         self.out_queue = out_queue
         self._stop_event = threading.Event()
         self.logger = logging.getLogger('WifiReceiver')
+        # Create UDP socket once
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind((self.host, self.port))
+        self.sock.settimeout(5)
 
     def run(self) -> None:
         while not self._stop_event.is_set():
             try:
-                with socket.create_connection((self.host, self.port), timeout=5) as sock:
-                    # Expect 4‑byte length prefix
-                    length_bytes = sock.recv(4)
-                    if len(length_bytes) < 4:
-                        continue
-                    length = int.from_bytes(length_bytes, byteorder='big')
-                    payload = sock.recv(length)
-                    while len(payload) < length:
-                        payload += sock.recv(length - len(payload))
-                    data = json.loads(payload.decode('utf-8'))
-                    self.out_queue.put(('wifi', data))
+                data, _addr = self.sock.recvfrom(65535)  # max UDP size
+                if not data:
+                    continue
+                message = json.loads(data.decode('utf-8'))
+                self.out_queue.put(('wifi', message))
+            except socket.timeout:
+                continue
             except Exception as e:
-                self.logger.debug(f'Wi‑Fi receive error: {e}')
-                time.sleep(1)
-        self.logger.info('Wi‑Fi receiver stopped')
+                self.logger.debug(f'Wi‑Fi UDP receive error: {e}')
+                time.sleep(0.1)
+        self.logger.info('Wi‑Fi UDP receiver stopped')
 
     def stop(self):
         self._stop_event.set()
+        try:
+            self.sock.close()
+        except Exception:
+            pass
+
 
 # Simple receiver for Bluetooth (RFCOMM) using pybluez
 class BtReceiver(threading.Thread):
@@ -85,7 +90,7 @@ class BtReceiver(threading.Thread):
 class BridgeNode(Node):
     def __init__(self):
         super().__init__('ps5_controller_bridge')
-        self.declare_parameter('wifi_host', '192.168.1.100')
+        self.declare_parameter('wifi_host', '0.0.0.0')
         self.declare_parameter('wifi_port', 9999)
         self.declare_parameter('bt_addr', '00:11:22:33:44:55')
         self.declare_parameter('bt_port', 1)
