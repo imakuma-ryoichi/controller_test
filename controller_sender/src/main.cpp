@@ -62,18 +62,16 @@ int main(int argc, char* argv[])
     ControllerData data{};
 
     while (true) {
-        const bool joystick_updated = update_controller(controller_fd, mapping, data);
-        const bool touchpad_updated = update_touchpad_event(
+        update_controller(controller_fd, mapping, data);
+        update_touchpad_event(
             touchpad_fd,
             mapping.touchpad_button_code,
             data);
 
-        if (joystick_updated || touchpad_updated) {
-            send_wifi(wifi_fd, data);
-            send_bluetooth(bluetooth_fd, data);
-        }
+        send_wifi(wifi_fd, data);
+        send_bluetooth(bluetooth_fd, data);
 
-        usleep(1000);
+        usleep(10000);
     }
 
     close(bluetooth_fd);
