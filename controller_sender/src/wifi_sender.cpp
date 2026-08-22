@@ -16,11 +16,11 @@ int create_wifi_sender(const char* ip, uint16_t port)
         return -1;
     }
 
-    sockaddr_in receiver{};
-    receiver.sin_family = AF_INET;
-    receiver.sin_port = htons(port);
+    sockaddr_in receiver_addr{};
+    receiver_addr.sin_family = AF_INET;
+    receiver_addr.sin_port = htons(port);
 
-    if (inet_pton(AF_INET, ip, &receiver.sin_addr) != 1) {
+    if (inet_pton(AF_INET, ip, &receiver_addr.sin_addr) != 1) {
         std::cerr << "受信側IPアドレスが不正です\n";
         close(socket_fd);
         return -1;
@@ -28,8 +28,8 @@ int create_wifi_sender(const char* ip, uint16_t port)
 
     if (connect(
         socket_fd,
-        reinterpret_cast<sockaddr*>(&receiver),
-        sizeof(receiver)) < 0)
+        reinterpret_cast<sockaddr*>(&receiver_addr),
+        sizeof(receiver_addr)) < 0)
     {
         std::cerr << "Wi-Fi接続に失敗しました: "
                   << std::strerror(errno) << '\n';
