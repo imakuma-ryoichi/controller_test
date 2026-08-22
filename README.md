@@ -116,7 +116,7 @@ LinuxのJoystick APIを使用する。
     /dev/input/js0
     /dev/input/js1
 
-Senderでは基本入力を`/dev/input/jsX`から取得し、タッチパッドクリック（`EV_KEY` / `BTN_LEFT`、code 272）は`touchpad.event_device`で指定した`/dev/input/eventX`から取得する。軸イベント（`ABS_X/Y`、`ABS_MT_POSITION_X/Y`）は取得対象にしない。
+Senderでは基本入力を`/dev/input/jsX`から取得し、タッチパッドクリック（`EV_KEY` / `BTN_LEFT`、code 272）は`touchpad.event_device`で指定した`/dev/input/eventX`から取得する。指定先がタッチパッドデバイスでない場合は、`ABS_MT_POSITION_X`と指定ボタンを持つeventデバイスを自動検索する。軸イベント（`ABS_X/Y`、`ABS_MT_POSITION_X/Y`）は取得対象にしない。
 
 ---
 

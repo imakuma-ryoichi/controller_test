@@ -33,7 +33,9 @@ int main(int argc, char* argv[])
     if (controller_fd < 0) {
         return 1;
     }
-    const int touchpad_fd = open_touchpad_event(mapping.touchpad_event_device.c_str());
+    const int touchpad_fd = open_touchpad_event(
+        mapping.touchpad_event_device.c_str(),
+        mapping.touchpad_button_code);
     if (touchpad_fd < 0) {
         close(controller_fd);
         return 1;

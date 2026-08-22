@@ -1,13 +1,16 @@
 #include "controller_input.hpp"
 
 #include <fcntl.h>
+#include <linux/input-event-codes.h>
 #include <linux/input.h>
 #include <linux/joystick.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+#include <string>
 
 int open_controller(const char* device)
 {
@@ -21,16 +24,66 @@ int open_controller(const char* device)
     return fd;
 }
 
-int open_touchpad_event(const char* device)
+namespace
+{
+bool supports_code(int fd, unsigned int event_type, unsigned int code)
+{
+    unsigned long bits[KEY_MAX / (sizeof(unsigned long) * 8) + 1]{};
+    const int bytes = ioctl(
+        fd,
+        EVIOCGBIT(event_type, sizeof(bits)),
+        bits);
+
+    if (bytes < 0) {
+        return false;
+    }
+
+    const std::size_t word = code / (sizeof(unsigned long) * 8);
+    const std::size_t bit = code % (sizeof(unsigned long) * 8);
+    return word < sizeof(bits) / sizeof(bits[0])
+        && (bits[word] & (1UL << bit)) != 0;
+}
+
+bool supports_touchpad(int fd, uint16_t button_code)
+{
+    return supports_code(fd, EV_KEY, button_code)
+        && supports_code(fd, EV_ABS, ABS_MT_POSITION_X);
+}
+}
+
+int open_touchpad_event(const char* device, uint16_t touchpad_button_code)
 {
     const int fd = open(device, O_RDONLY | O_NONBLOCK);
 
-    if (fd < 0) {
-        std::cerr << "タッチパッド入力デバイスを開けません: "
-                  << std::strerror(errno) << '\n';
+    if (fd >= 0 && supports_touchpad(fd, touchpad_button_code)) {
+        return fd;
     }
 
-    return fd;
+    if (fd >= 0) {
+        close(fd);
+        std::cerr << "指定されたデバイスにタッチパッドボタンがありません: "
+                  << device << '\n';
+    } else {
+        std::cerr << "指定されたタッチパッド入力デバイスを開けません: "
+                  << device << ": " << std::strerror(errno) << '\n';
+    }
+
+    for (unsigned int index = 0; index < 32; ++index) {
+        const std::string candidate = "/dev/input/event" + std::to_string(index);
+        const int candidate_fd = open(candidate.c_str(), O_RDONLY | O_NONBLOCK);
+        if (candidate_fd < 0) {
+            continue;
+        }
+        if (supports_touchpad(candidate_fd, touchpad_button_code)) {
+            std::cerr << "タッチパッド入力デバイスを自動選択: "
+                      << candidate << '\n';
+            return candidate_fd;
+        }
+        close(candidate_fd);
+    }
+
+    std::cerr << "タッチパッドボタンを持つ入力デバイスが見つかりません\n";
+    return -1;
 }
 
 bool update_controller(

@@ -4,7 +4,7 @@
 #include "controller_id.hpp"
 
 int open_controller(const char* device);
-int open_touchpad_event(const char* device);
+int open_touchpad_event(const char* device, uint16_t touchpad_button_code);
 bool update_controller(
     int controller_fd,
     const ControllerMapping& mapping,
