@@ -1,6 +1,6 @@
 # Controller Communication System
 
-PS5 DualSenseコントローラーの全入力をLinux Joystick APIから取得し、生データのまま100 Hzで送信するシステム。
+対応コントローラーの入力をLinux Joystick APIから取得し、生データのまま100 Hzで送信するシステム（例: PS5 DualSense Controller）。
 
 SenderとReceiverを分離し、Senderでは入力取得と通信のみを担当する。
 
@@ -10,7 +10,7 @@ ReceiverではWi-FiおよびBluetoothからデータを受信し、最終的にR
 
 # システム構成
 
-    PS5 DualSense
+    対応コントローラー（例: PS5 DualSense Controller）
           │
           ↓
     /dev/input/jsX
@@ -85,7 +85,7 @@ SenderとReceiverは別リポジトリとして管理する。
 
 Senderは以下のみを担当する。
 
-1. PS5 DualSenseから入力を取得
+1. 対応コントローラー（例: PS5 DualSense Controller）から入力を取得
 2. Linux Joystick APIから全入力イベントを取得
 3. 現在の全入力状態を保持
 4. ControllerDataにまとめる
@@ -116,13 +116,13 @@ LinuxのJoystick APIを使用する。
     /dev/input/js0
     /dev/input/js1
 
-Senderでは/dev/input/eventXを直接使用せず、/dev/input/jsXからコントローラー入力をまとめて取得する。
+Senderでは基本入力を`/dev/input/jsX`から取得し、タッチパッドクリック（`EV_KEY` / `BTN_LEFT`、code 272）は`touchpad.event_device`で指定した`/dev/input/eventX`から取得する。指定先がタッチパッドデバイスでない場合は、`ABS_MT_POSITION_X`と指定ボタンを持つeventデバイスを自動検索する。軸イベント（`ABS_X/Y`、`ABS_MT_POSITION_X/Y`）は取得対象にしない。
 
 ---
 
 # ControllerData
 
-ControllerDataにはコントローラーの13入力の現在状態を保持する。
+ControllerDataにはコントローラーの14入力の現在状態を保持する。
 
 軸：
 
@@ -130,7 +130,7 @@ ControllerDataにはコントローラーの13入力の現在状態を保持す�
 
 ボタン：
 
-    buttons[7] : 十字キーなどのオン/オフ入力
+    buttons[14] : 13個のJoystickボタン + touchpad押下(0/1)
 
 `axes[]` はLinux Joystick APIの生の`int32_t`値を保持し、L2/R2の入力加減も含む。
 `buttons[]` は押下を1、離上を0として保持する。
@@ -193,7 +193,7 @@ Wi-FiとBluetoothは、それぞれ単独で動作確認した後、両方を同
 - GNU Make
 - BlueZ
 - Linux Joystick API
-- PS5 DualSense
+- 対応機種の一例: PS5 DualSense Controller
 
 ## Receiver
 
