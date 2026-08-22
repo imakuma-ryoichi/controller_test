@@ -1,5 +1,7 @@
 ROS_DISTRO ?= jazzy
 ROS_PATH := /opt/ros/$(ROS_DISTRO)
+ROS_INCLUDE_DIRS := -I$(ROS_PATH)/include \
+                    $(foreach dir,$(wildcard $(ROS_PATH)/include/*),-I$(dir))
 
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2 \
@@ -7,17 +9,7 @@ CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2 \
             -Isrc \
             -I../controller_sender/include \
             -I../controller_receiver/include \
-            -I$(ROS_PATH)/include/rclcpp \
-            -I$(ROS_PATH)/include/sensor_msgs \
-            -I$(ROS_PATH)/include/rcutils \
-            -I$(ROS_PATH)/include/rmw \
-            -I$(ROS_PATH)/include/builtin_interfaces \
-            -I$(ROS_PATH)/include/rosidl_runtime_c \
-            -I$(ROS_PATH)/include/rosidl_runtime_cpp \
-            -I$(ROS_PATH)/include/tracetools \
-            -I$(ROS_PATH)/include/rcl \
-            -I$(ROS_PATH)/include/rcl_interfaces \
-            -I$(ROS_PATH)/include/rcpputils
+            $(ROS_INCLUDE_DIRS)
 
 LDFLAGS := -L$(ROS_PATH)/lib -Wl,-rpath,$(ROS_PATH)/lib
 LDLIBS := -lrclcpp -lsensor_msgs__rosidl_typesupport_cpp -lsensor_msgs__rosidl_generator_c -lbluetooth -pthread
