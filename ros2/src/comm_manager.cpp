@@ -1,5 +1,6 @@
 #include "comm_manager.hpp"
 
+#include <cctype>
 #include <fstream>
 #include <map>
 #include <stdexcept>
@@ -26,6 +27,31 @@ CommManager::Channel parse_channel_name(const std::string& name)
         return CommManager::Channel::Bluetooth;
     }
     throw std::runtime_error("unknown communication channel: " + name);
+}
+
+bool parse_bool(const std::string& value, bool& result)
+{
+    std::string normalized;
+    normalized.reserve(value.size());
+    for (const char c : value) {
+        normalized.push_back(static_cast<char>(
+            std::tolower(static_cast<unsigned char>(c))));
+    }
+
+    if (normalized == "true" || normalized == "yes" ||
+        normalized == "on" || normalized == "1")
+    {
+        result = true;
+        return true;
+    }
+    if (normalized == "false" || normalized == "no" ||
+        normalized == "off" || normalized == "0")
+    {
+        result = false;
+        return true;
+    }
+
+    return false;
 }
 
 std::map<std::string, std::string> load_config_values(
@@ -96,6 +122,23 @@ CommManager::CommManager(const std::string& config_path)
         }
         stale_timeout_ = std::chrono::milliseconds(timeout_ms);
     }
+
+    const auto poll_rate_it = values.find("poll_rate_hz");
+    if (poll_rate_it != values.end()) {
+        const int rate_hz = std::stoi(poll_rate_it->second);
+        if (rate_hz <= 0 || rate_hz > 1000) {
+            throw std::runtime_error("poll_rate_hz must be between 1 and 1000");
+        }
+        poll_period_ = std::chrono::milliseconds(1000 / rate_hz);
+    }
+
+    const auto publish_it = values.find("publish_on_new_data_only");
+    if (publish_it != values.end() &&
+        !parse_bool(publish_it->second, publish_on_new_data_only_))
+    {
+        throw std::runtime_error(
+            "publish_on_new_data_only must be true or false");
+    }
 }
 
 std::optional<CommManager::Channel> CommManager::select_channel(
@@ -113,6 +156,16 @@ std::optional<CommManager::Channel> CommManager::select_channel(
     }
 
     return std::nullopt;
+}
+
+std::chrono::milliseconds CommManager::poll_period() const
+{
+    return poll_period_;
+}
+
+bool CommManager::publish_on_new_data_only() const
+{
+    return publish_on_new_data_only_;
 }
 
 const char* CommManager::channel_name(Channel channel)

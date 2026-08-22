@@ -46,20 +46,37 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    const int touchpad_fd = open_touchpad_event(
-        mapping.touchpad_event_device.c_str(),
-        mapping.touchpad_button_code);
+    int touchpad_fd = -1;
+    if (mapping.touchpad_enabled) {
+        touchpad_fd = open_touchpad_event(
+            mapping.touchpad_event_device.c_str(),
+            mapping.touchpad_button_code);
 
-    if (touchpad_fd < 0) {
-        close(controller_fd);
-        return 1;
+        if (touchpad_fd < 0) {
+            close(controller_fd);
+            return 1;
+        }
     }
 
-    const int wifi_fd =
-        create_wifi_sender(config.wifi_address.c_str(), config.wifi_port);
+    int wifi_fd = -1;
+    if (config.wifi_enabled) {
+        wifi_fd =
+            create_wifi_sender(config.wifi_address.c_str(), config.wifi_port);
 
-    if (wifi_fd < 0) {
-        close(touchpad_fd);
+        if (wifi_fd < 0) {
+            if (touchpad_fd >= 0) {
+                close(touchpad_fd);
+            }
+            close(controller_fd);
+            return 1;
+        }
+    }
+
+    if (!config.wifi_enabled && !config.bluetooth_enabled) {
+        std::cerr << "Wi-FiとBluetoothのどちらかは有効にしてください\n";
+        if (touchpad_fd >= 0) {
+            close(touchpad_fd);
+        }
         close(controller_fd);
         return 1;
     }
@@ -76,7 +93,10 @@ int main(int argc, char* argv[])
     while (true) {
         const auto now = std::chrono::steady_clock::now();
 
-        if (bluetooth_fd < 0 && now >= next_bluetooth_retry) {
+        if (config.bluetooth_enabled &&
+            bluetooth_fd < 0 &&
+            now >= next_bluetooth_retry)
+        {
             bluetooth_fd =
                 connect_bluetooth(
                     config.bluetooth_address.c_str(),
@@ -86,12 +106,14 @@ int main(int argc, char* argv[])
         }
 
         update_controller(controller_fd, mapping, data);
-        update_touchpad_event(
-            touchpad_fd,
-            mapping.touchpad_button_code,
-            data);
+        if (touchpad_fd >= 0) {
+            update_touchpad_event(
+                touchpad_fd,
+                mapping.touchpad_button_code,
+                data);
+        }
 
-        if (!send_wifi(wifi_fd, data)) {
+        if (wifi_fd >= 0 && !send_wifi(wifi_fd, data)) {
             std::cerr << "Wi-Fiデータの送信に失敗しました\n";
         }
 
@@ -110,8 +132,15 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_until(next_tick);
     }
 
-    close(wifi_fd);
-    close(touchpad_fd);
+    if (bluetooth_fd >= 0) {
+        close(bluetooth_fd);
+    }
+    if (wifi_fd >= 0) {
+        close(wifi_fd);
+    }
+    if (touchpad_fd >= 0) {
+        close(touchpad_fd);
+    }
     close(controller_fd);
 
     return 0;

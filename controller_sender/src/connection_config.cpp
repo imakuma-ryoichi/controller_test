@@ -6,6 +6,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <cctype>
 
 namespace
 {
@@ -26,6 +27,31 @@ std::string unquote(const std::string& value)
         return value.substr(1, value.size() - 2);
     }
     return value;
+}
+
+bool parse_bool(const std::string& value, bool& result)
+{
+    std::string normalized;
+    normalized.reserve(value.size());
+    for (const char c : value) {
+        normalized.push_back(static_cast<char>(
+            std::tolower(static_cast<unsigned char>(c))));
+    }
+
+    if (normalized == "true" || normalized == "yes" ||
+        normalized == "on" || normalized == "1")
+    {
+        result = true;
+        return true;
+    }
+    if (normalized == "false" || normalized == "no" ||
+        normalized == "off" || normalized == "0")
+    {
+        result = false;
+        return true;
+    }
+
+    return false;
 }
 } // namespace
 
@@ -70,6 +96,13 @@ bool load_connection_config(const char* path, ConnectionConfig& config)
     if (values.find("controller.device") != values.end()) {
         config.controller_device = values["controller.device"];
     }
+    if (values.find("wifi.enabled") != values.end() &&
+        !parse_bool(values["wifi.enabled"], config.wifi_enabled))
+    {
+        std::cerr << "wifi.enabled の値が不正です: "
+                  << values["wifi.enabled"] << '\n';
+        return false;
+    }
     if (values.find("wifi.address") != values.end()) {
         config.wifi_address = values["wifi.address"];
     }
@@ -89,6 +122,13 @@ bool load_connection_config(const char* path, ConnectionConfig& config)
     }
     if (values.find("bluetooth.address") != values.end()) {
         config.bluetooth_address = values["bluetooth.address"];
+    }
+    if (values.find("bluetooth.enabled") != values.end() &&
+        !parse_bool(values["bluetooth.enabled"], config.bluetooth_enabled))
+    {
+        std::cerr << "bluetooth.enabled の値が不正です: "
+                  << values["bluetooth.enabled"] << '\n';
+        return false;
     }
     if (values.find("bluetooth.channel") != values.end()) {
         try {
