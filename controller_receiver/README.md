@@ -49,12 +49,12 @@ controller-receiver/
 
 ## ControllerData
 
-senderとreceiverで共通のデータ構造を使用する。PS5 DualSenseの13入力を保持する。
+senderとreceiverで共通のデータ構造を使用する。対応コントローラーの14入力を保持する（例: PS5 DualSense Controller）。
 
 | データ | Linuxイベント |
 |---|---|
 | 軸配列 | 左スティックXY、右スティックXY、L2、R2 |
-| ボタン配列 | 十字キーなど13個のオン/オフ入力 |
+| ボタン配列 | 13個のJoystickボタン + touchpadクリック（`EV_KEY` / `BTN_LEFT`、code 272） |
 
 軸配列は`int32_t`の生データ、ボタン配列は押下時1・離上時0で送信する。
 

@@ -2,11 +2,13 @@
 #include "controller_data.hpp"
 
 #include <arpa/inet.h>
+#include <cerrno>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 void receive_wifi(uint16_t port)
 {
@@ -54,39 +56,38 @@ void receive_wifi(uint16_t port)
     std::cout << "Wi-Fi受信待機中: TCP/" << port << '\n';
 
     while (true) {
-        const int client_fd = accept(socket_fd, nullptr, nullptr);
+        ControllerData data{};
 
-        if (client_fd < 0) {
+        const ssize_t size = recvfrom(
+            socket_fd,
+            &data,
+            sizeof(data),
+            0,
+            nullptr,
+            nullptr);
+
+        if (size < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            break;
+        }
+
+        if (size != static_cast<ssize_t>(sizeof(data))) {
             continue;
         }
 
-        std::cout << "Wi-Fi接続\n";
-
-        while (true) {
-            ControllerData data{};
-
-            const ssize_t size = recv(
-                client_fd,
-                &data,
-                sizeof(data),
-                MSG_WAITALL);
-
-            if (size != sizeof(data)) {
-                break;
-            }
-
-            std::cout << "[Wi-Fi] axes=";
-            for (const int32_t value : data.axes) {
-                std::cout << value << ' ';
-            }
-            std::cout << "buttons=";
-            for (const int32_t value : data.buttons) {
-                std::cout << value << ' ';
-            }
-            std::cout << '\n';
+        std::string output = "[Wi-Fi] axes=";
+        for (const int32_t value : data.axes) {
+            output += std::to_string(value) + ' ';
         }
-
-        close(client_fd);
-        std::cout << "Wi-Fi切断\n";
+        output += "buttons=";
+        for (const int32_t value : data.buttons) {
+            output += std::to_string(value) + ' ';
+        }
+        output += '\n';
+        std::cout << output << std::flush;
     }
+
+    close(socket_fd);
 }
