@@ -9,7 +9,7 @@
 
 int create_wifi_sender(const char* ip, uint16_t port)
 {
-    const int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (socket_fd < 0) {
         std::cerr << "Wi-Fi Socketの作成に失敗しました\n";
@@ -43,21 +43,6 @@ int create_wifi_sender(const char* ip, uint16_t port)
 bool send_wifi(int socket_fd, const ControllerData& data)
 {
     const auto* bytes = reinterpret_cast<const char*>(&data);
-    std::size_t sent = 0;
-
-    while (sent < sizeof(data)) {
-        const ssize_t size = send(
-            socket_fd,
-            bytes + sent,
-            sizeof(data) - sent,
-            0);
-
-        if (size <= 0) {
-            return false;
-        }
-
-        sent += static_cast<std::size_t>(size);
-    }
-
-    return true;
+    const ssize_t size = send(socket_fd, bytes, sizeof(data), 0);
+    return size == static_cast<ssize_t>(sizeof(data));
 }
