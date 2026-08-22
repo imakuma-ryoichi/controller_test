@@ -54,7 +54,7 @@ senderとreceiverで共通のデータ構造を使用する。対応コントロ
 | データ | Linuxイベント |
 |---|---|
 | 軸配列 | 左スティックXY、右スティックXY、L2、R2 |
-| ボタン配列 | 13個のJoystickボタン + touchpad押下 |
+| ボタン配列 | 13個のJoystickボタン + touchpadクリック（`EV_KEY` / `BTN_LEFT`、code 272） |
 
 軸配列は`int32_t`の生データ、ボタン配列は押下時1・離上時0で送信する。
 
