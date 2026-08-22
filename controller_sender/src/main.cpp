@@ -68,8 +68,13 @@ int main(int argc, char* argv[])
             mapping.touchpad_button_code,
             data);
 
-        send_wifi(wifi_fd, data);
-        send_bluetooth(bluetooth_fd, data);
+        const bool wifi_sent = send_wifi(wifi_fd, data);
+        const bool bluetooth_sent = send_bluetooth(bluetooth_fd, data);
+
+        if (!wifi_sent || !bluetooth_sent) {
+            std::cerr << "ControllerDataの送信に失敗しました\n";
+            break;
+        }
 
         usleep(10000);
     }
