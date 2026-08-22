@@ -1,4 +1,90 @@
-# Controller Communication System
+# Controller Communication System (Python版)
+
+## 概要
+- コントローラ入力取得 → Wi‑Fi (UDP) & Bluetooth (RFCOMM) へ同時送信
+- **C++ 実装は全て削除**し、Python スクリプト `controller_sender.py` のみで動作
+- systemd による常駐サービスとして利用想定
+
+## 必要環境
+- Ubuntu/Debian 系 Linux (Raspberry Pi 等)
+- Python 3.9 以上
+- 必要パッケージ（1回だけ実行）
+```bash
+sudo apt update
+sudo apt install python3-pip python3-evdev bluetooth libbluetooth-dev
+pip3 install pyyaml pybluez
+```
+
+## 設定ファイル (`config.yaml`)
+プロジェクト直下に配置する例:
+```yaml
+controller_device: "/dev/input/event0"   # 取得したいコントローラの evdev パス
+touchpad_device: "/dev/input/event1"   # 使用しない場合は false にする
+touchpad_enabled: false
+wifi:
+  enabled: true
+  address: "192.168.1.100"
+  port: 5000
+bluetooth:
+  enabled: true
+  address: "01:23:45:67:89:AB"
+  channel: 1
+send_rate_hz: 60
+```
+必要に応じてデバイスパスやアドレスを書き換えてください。
+
+## 実行方法
+### 手動実行
+```bash
+cd /home/user/controller-rox
+python3 controller_sender.py --config config.yaml
+```
+Ctrl+C で終了します。
+
+### systemd で常駐
+`/etc/systemd/system/controller-sender.service` として配置例:
+```ini
+[Unit]
+Description=Controller sender (Python)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/user/controller-rox/controller_sender.py --config /home/user/controller-rox/config.yaml
+Restart=always
+User=your_user   # 適宜置換
+
+[Install]
+WantedBy=multi-user.target
+```
+```bash
+# 配置 & 有効化
+sudo cp systemd/controller-sender.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable controller-sender
+sudo systemctl start controller-sender
+# 状態確認
+systemctl status controller-sender
+# ログ確認
+journalctl -u controller-sender -f
+```
+
+## テスト手順
+1. コントローラが `/dev/input/event0` 等に認識されているか確認 (`ls /dev/input/event*`)。
+2. `jstest` 等で入力が取得できることを確認。
+3. `controller_sender.py` 起動後、別端末で `nc -u <IP> 5000` で UDP パケット受信を確認。
+4. Bluetooth が有効なら `bluetoothctl` でペアリングし、RFCOMM が開通しているか確認。
+5. systemd サービスとして自動起動し、`journalctl -u controller-sender -f` でエラーログが無いことを確認。
+
+## これまでの C++ 実装は削除済み
+- `controller_sender/src/*.cpp` と `controller_receiver/*.cpp` は全て削除しました。
+- 参考になる Makefile 等は削除して問題ありません。
+
+---
+
+### License
+MIT License
+
 
 対応コントローラーの入力をLinux Joystick APIから取得し、生データのまま設定周期で送信するシステム（例: PS5 DualSense Controller）。
 
