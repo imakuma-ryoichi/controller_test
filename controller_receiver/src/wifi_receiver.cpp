@@ -2,11 +2,13 @@
 #include "controller_data.hpp"
 
 #include <arpa/inet.h>
+#include <cerrno>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 void receive_wifi(uint16_t port)
 {
@@ -65,4 +67,6 @@ void receive_wifi(uint16_t port)
         }
         std::cout << '\n';
     }
+
+    close(socket_fd);
 }

@@ -7,6 +7,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+namespace
+{
+sockaddr_in g_receiver{};
+}
+
 int create_wifi_sender(const char* ip, uint16_t port)
 {
     const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -16,11 +21,11 @@ int create_wifi_sender(const char* ip, uint16_t port)
         return -1;
     }
 
-    sockaddr_in receiver{};
-    receiver.sin_family = AF_INET;
-    receiver.sin_port = htons(port);
+    g_receiver = {};
+    g_receiver.sin_family = AF_INET;
+    g_receiver.sin_port = htons(port);
 
-    if (inet_pton(AF_INET, ip, &receiver.sin_addr) != 1) {
+    if (inet_pton(AF_INET, ip, &g_receiver.sin_addr) != 1) {
         std::cerr << "受信側IPアドレスが不正です\n";
         close(socket_fd);
         return -1;
