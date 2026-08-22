@@ -34,7 +34,7 @@ int main()
     {
         ControllerData data{};
 
-        if (!read_controller(controller_fd, data))
+        if (!open_controller(controller_fd, data))
         {
             break;
         }
