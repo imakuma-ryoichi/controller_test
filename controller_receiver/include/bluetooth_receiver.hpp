@@ -1,3 +1,5 @@
 #pragma once
 
-void receive_bluetooth();
+#include <cstdint>
+
+void receive_bluetooth(uint8_t channel);

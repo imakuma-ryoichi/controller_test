@@ -2,17 +2,17 @@
 #include "controller_data.hpp"
 
 #include <arpa/inet.h>
+#include <cerrno>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include <cstdint>
 #include <iostream>
+#include <string>
 
-void receive_wifi()
+void receive_wifi(uint16_t port)
 {
-    constexpr uint16_t PORT = 5000;
-
-    const int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (socket_fd < 0) {
         std::cerr << "Wi-Fi Socketの作成に失敗しました\n";
@@ -35,7 +35,7 @@ void receive_wifi()
     sockaddr_in address{};
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(port);
 
     if (bind(
         socket_fd,
@@ -47,48 +47,26 @@ void receive_wifi()
         return;
     }
 
-    if (listen(socket_fd, 1) < 0) {
-        std::cerr << "Wi-Fiのlistenに失敗しました\n";
-        close(socket_fd);
-        return;
-    }
-
-    std::cout << "Wi-Fi受信待機中: TCP/" << PORT << '\n';
+    std::cout << "Wi-Fi受信待機中: UDP/" << port << '\n';
 
     while (true) {
-        const int client_fd = accept(socket_fd, nullptr, nullptr);
+        ControllerData data{};
+        const ssize_t size = recv(socket_fd, &data, sizeof(data), 0);
 
-        if (client_fd < 0) {
+        if (size != sizeof(data)) {
             continue;
         }
 
-        std::cout << "Wi-Fi接続\n";
-
-        while (true) {
-            ControllerData data{};
-
-            const ssize_t size = recv(
-                client_fd,
-                &data,
-                sizeof(data),
-                MSG_WAITALL);
-
-            if (size != sizeof(data)) {
-                break;
-            }
-
-            std::cout << "[Wi-Fi] axes=";
-            for (const int32_t value : data.axes) {
-                std::cout << value << ' ';
-            }
-            std::cout << "buttons=";
-            for (const int32_t value : data.buttons) {
-                std::cout << value << ' ';
-            }
-            std::cout << '\n';
+        std::cout << "[Wi-Fi] axes=";
+        for (const int32_t value : data.axes) {
+            std::cout << value << ' ';
         }
-
-        close(client_fd);
-        std::cout << "Wi-Fi切断\n";
+        std::cout << "buttons=";
+        for (const int32_t value : data.buttons) {
+            std::cout << value << ' ';
+        }
+        std::cout << '\n';
     }
+
+    close(socket_fd);
 }

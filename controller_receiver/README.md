@@ -12,7 +12,7 @@ Controller
 Linux evdev
     ↓
 controller-sender
-    ├── Wi-Fi → TCP
+    ├── Wi-Fi → UDP
     └── Bluetooth → RFCOMM
               ↓
       controller-receiver
@@ -40,8 +40,8 @@ controller-receiver/
 | データ形式 | `ControllerData` |
 | 送信周期 | 100 Hz |
 | 送信間隔 | 10 ms |
-| Wi-Fi | Transmission Control Protocol |
-| TCPポート | 5000 |
+| Wi-Fi | User Datagram Protocol |
+| UDPポート | 5000 |
 | Bluetooth | Radio Frequency Communication |
 | Bluetoothチャンネル | 1 |
 | データ処理 | 生データのまま送信 |
@@ -49,12 +49,12 @@ controller-receiver/
 
 ## ControllerData
 
-senderとreceiverで共通のデータ構造を使用する。PS5 DualSenseの13入力を保持する。
+senderとreceiverで共通のデータ構造を使用する。対応コントローラーの14入力を保持する（例: PS5 DualSense Controller）。
 
 | データ | Linuxイベント |
 |---|---|
 | 軸配列 | 左スティックXY、右スティックXY、L2、R2 |
-| ボタン配列 | 十字キーなど13個のオン/オフ入力 |
+| ボタン配列 | 13個のJoystickボタン + touchpadクリック（`EV_KEY` / `BTN_LEFT`、code 272） |
 
 軸配列は`int32_t`の生データ、ボタン配列は押下時1・離上時0で送信する。
 
@@ -86,7 +86,7 @@ controller-sender/
 
 - C++
 - Linux evdev
-- Transmission Control Protocol
+- User Datagram Protocol
 - Bluetooth Radio Frequency Communication
 - BlueZ
 - systemd
@@ -200,7 +200,7 @@ make clean
 
 - コントローラーの`/dev/input/eventX`
 - receiverのIPアドレス
-- Wi-FiのTCPポート
+- Wi-FiのUDPポート
 - receiverのBluetoothアドレス
 - BluetoothのRFCOMMチャンネル
 
@@ -337,7 +337,7 @@ ControllerData
     ├──────────────┐
     ↓              ↓
   Wi-Fi        Bluetooth
-   TCP           RFCOMM
+   UDP           RFCOMM
     ↓              ↓
     └───────┬──────┘
             ↓
