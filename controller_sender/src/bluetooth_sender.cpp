@@ -47,11 +47,22 @@ int connect_bluetooth(const char* address, uint8_t channel)
 
 bool send_bluetooth(int socket_fd, const ControllerData& data)
 {
-    const ssize_t size = send(
-        socket_fd,
-        &data,
-        sizeof(data),
-        0);
+    const auto* bytes = reinterpret_cast<const char*>(&data);
+    std::size_t sent = 0;
 
-    return size == sizeof(data);
+    while (sent < sizeof(data)) {
+        const ssize_t size = send(
+            socket_fd,
+            bytes + sent,
+            sizeof(data) - sent,
+            0);
+
+        if (size <= 0) {
+            return false;
+        }
+
+        sent += static_cast<std::size_t>(size);
+    }
+
+    return true;
 }
