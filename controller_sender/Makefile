@@ -1,6 +1,6 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2 -Iinclude
-LDLIBS := -lbluetooth
+LDLIBS := -lbluetooth -pthread
 
 TARGET := build/controller_sender
 
@@ -12,12 +12,11 @@ OBJECTS := $(SOURCES:src/%.cpp=build/%.o)
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)
 	$(CXX) $(OBJECTS) -o $@ $(LDLIBS)
-	chmod +x $@
 
 build/%.o: src/%.cpp
-	mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 run: $(TARGET)
