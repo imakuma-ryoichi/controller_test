@@ -77,7 +77,8 @@ bool load_connection_config(const char* path, ConnectionConfig& config)
         try {
             size_t parsed = 0;
             unsigned long port = std::stoul(values["wifi.port"], &parsed);
-            if (parsed != values["wifi.port"].size() || port > std::numeric_limits<uint16_t>::max()) {
+            if (parsed != values["wifi.port"].size() || port == 0 ||
+                port > std::numeric_limits<uint16_t>::max()) {
                 throw std::out_of_range("port");
             }
             config.wifi_port = static_cast<uint16_t>(port);
