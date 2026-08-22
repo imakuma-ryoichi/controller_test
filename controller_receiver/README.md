@@ -12,7 +12,7 @@ Controller
 Linux evdev
     ↓
 controller-sender
-    ├── Wi-Fi → TCP
+    ├── Wi-Fi → UDP
     └── Bluetooth → RFCOMM
               ↓
       controller-receiver
@@ -40,8 +40,8 @@ controller-receiver/
 | データ形式 | `ControllerData` |
 | 送信周期 | 100 Hz |
 | 送信間隔 | 10 ms |
-| Wi-Fi | Transmission Control Protocol |
-| TCPポート | 5000 |
+| Wi-Fi | User Datagram Protocol |
+| UDPポート | 5000 |
 | Bluetooth | Radio Frequency Communication |
 | Bluetoothチャンネル | 1 |
 | データ処理 | 生データのまま送信 |
@@ -86,7 +86,7 @@ controller-sender/
 
 - C++
 - Linux evdev
-- Transmission Control Protocol
+- User Datagram Protocol
 - Bluetooth Radio Frequency Communication
 - BlueZ
 - systemd
@@ -200,7 +200,7 @@ make clean
 
 - コントローラーの`/dev/input/eventX`
 - receiverのIPアドレス
-- Wi-FiのTCPポート
+- Wi-FiのUDPポート
 - receiverのBluetoothアドレス
 - BluetoothのRFCOMMチャンネル
 
@@ -337,7 +337,7 @@ ControllerData
     ├──────────────┐
     ↓              ↓
   Wi-Fi        Bluetooth
-   TCP           RFCOMM
+   UDP           RFCOMM
     ↓              ↓
     └───────┬──────┘
             ↓

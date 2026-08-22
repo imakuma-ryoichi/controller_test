@@ -12,7 +12,7 @@
 
 void receive_wifi(uint16_t port)
 {
-    const int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (socket_fd < 0) {
         std::cerr << "Wi-Fi Socketの作成に失敗しました\n";
@@ -47,46 +47,25 @@ void receive_wifi(uint16_t port)
         return;
     }
 
-    if (listen(socket_fd, 1) < 0) {
-        std::cerr << "Wi-Fiのlistenに失敗しました\n";
-        close(socket_fd);
-        return;
-    }
-
-    std::cout << "Wi-Fi受信待機中: TCP/" << port << '\n';
+    std::cout << "Wi-Fi受信待機中: UDP/" << port << '\n';
 
     while (true) {
         ControllerData data{};
+        const ssize_t size = recv(socket_fd, &data, sizeof(data), 0);
 
-        const ssize_t size = recvfrom(
-            socket_fd,
-            &data,
-            sizeof(data),
-            0,
-            nullptr,
-            nullptr);
-
-        if (size < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            break;
-        }
-
-        if (size != static_cast<ssize_t>(sizeof(data))) {
+        if (size != sizeof(data)) {
             continue;
         }
 
-        std::string output = "[Wi-Fi] axes=";
+        std::cout << "[Wi-Fi] axes=";
         for (const int32_t value : data.axes) {
-            output += std::to_string(value) + ' ';
+            std::cout << value << ' ';
         }
-        output += "buttons=";
+        std::cout << "buttons=";
         for (const int32_t value : data.buttons) {
-            output += std::to_string(value) + ' ';
+            std::cout << value << ' ';
         }
-        output += '\n';
-        std::cout << output << std::flush;
+        std::cout << '\n';
     }
 
     close(socket_fd);

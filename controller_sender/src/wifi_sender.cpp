@@ -36,13 +36,7 @@ int create_wifi_sender(const char* ip, uint16_t port)
 
 bool send_wifi(int socket_fd, const ControllerData& data)
 {
-    const ssize_t size = sendto(
-        socket_fd,
-        &data,
-        sizeof(data),
-        0,
-        reinterpret_cast<const sockaddr*>(&g_receiver),
-        sizeof(g_receiver));
-
+    const auto* bytes = reinterpret_cast<const char*>(&data);
+    const ssize_t size = send(socket_fd, bytes, sizeof(data), 0);
     return size == static_cast<ssize_t>(sizeof(data));
 }
