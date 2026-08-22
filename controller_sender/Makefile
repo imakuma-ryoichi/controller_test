@@ -7,7 +7,7 @@ TARGET := build/controller_sender
 SOURCES := $(wildcard src/*.cpp)
 OBJECTS := $(SOURCES:src/%.cpp=build/%.o)
 
-.PHONY: all clean run
+.PHONY: all clean run install
 
 all: $(TARGET)
 
@@ -21,6 +21,10 @@ build/%.o: src/%.cpp
 
 run: $(TARGET)
 	./$(TARGET)
+
+install: $(TARGET)
+	install -D -m 755 $(TARGET) /usr/local/bin/controller_sender
+	install -D -m 644 config/controller_id.yaml /etc/controller_sender/controller_id.yaml
 
 clean:
 	rm -rf build

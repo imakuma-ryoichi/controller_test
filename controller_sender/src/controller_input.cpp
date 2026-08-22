@@ -1,5 +1,4 @@
 #include "controller_input.hpp"
-#include "controller_config.hpp"
 
 #include <fcntl.h>
 #include <linux/joystick.h>
@@ -21,7 +20,10 @@ int open_controller(const char* device)
     return fd;
 }
 
-bool update_controller(int controller_fd, ControllerData& data)
+bool update_controller(
+    int controller_fd,
+    const ControllerMapping& mapping,
+    ControllerData& data)
 {
     bool updated = false;
     js_event event{};
@@ -31,16 +33,22 @@ bool update_controller(int controller_fd, ControllerData& data)
 
         switch (event.type) {
         case JS_EVENT_AXIS:
-            if (event.number < controller_config::AXIS_COUNT) {
-                data.axes[event.number] = event.value;
-                updated = true;
+            for (size_t index = 0; index < mapping.axis_events.size(); ++index) {
+                if (event.number == mapping.axis_events[index]) {
+                    data.axes[index] = event.value;
+                    updated = true;
+                    break;
+                }
             }
             break;
 
         case JS_EVENT_BUTTON:
-            if (event.number < controller_config::BUTTON_COUNT) {
-                data.buttons[event.number] = event.value != 0 ? 1 : 0;
-                updated = true;
+            for (size_t index = 0; index < mapping.button_events.size(); ++index) {
+                if (event.number == mapping.button_events[index]) {
+                    data.buttons[index] = event.value != 0 ? 1 : 0;
+                    updated = true;
+                    break;
+                }
             }
             break;
 

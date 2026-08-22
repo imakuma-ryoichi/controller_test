@@ -47,6 +47,8 @@ SenderとReceiverは別リポジトリとして管理する。
     ├── Makefile
     ├── README.md
     ├── .gitignore
+    ├── config/
+    │   └── controller_id.yaml
     ├── include/
     │   ├── controller_data.hpp
     │   ├── controller_input.hpp
@@ -265,17 +267,18 @@ DualSenseのスティック、トリガー、ボタンなどを操作し、入�
 
 ---
 
-# Senderのデバイス設定
+# Senderの設定
 
-src/main.cppのDEVICEを実際のデバイスに合わせる。
+`config/controller_id.yaml`でJoystickイベント番号と`ControllerData`の対応を設定する。
+このファイルはビルド後も変更でき、起動時に読み込まれる。別の設定ファイルを使う場合：
 
-例：
+    ./build/controller_sender --config /path/to/controller_id.yaml
 
-    constexpr char DEVICE[] = "/dev/input/js0";
+標準設定ファイル：
 
-DualSenseがjs1の場合：
+    controller_sender/config/controller_id.yaml
 
-    constexpr char DEVICE[] = "/dev/input/js1";
+コントローラーのデバイス、ReceiverのIPアドレス、ポートなどの通信設定は`src/main.cpp`で設定する。
 
 ---
 
@@ -303,6 +306,10 @@ Makefileがbuildディレクトリを自動的に作成する。
 生成される実行ファイル：
 
     build/controller_sender
+
+インストール時は設定ファイルを`/etc/controller_sender/controller_id.yaml`へ配置する：
+
+    sudo make install
 
 ---
 

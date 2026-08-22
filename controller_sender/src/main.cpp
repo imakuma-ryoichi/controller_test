@@ -1,11 +1,27 @@
 #include <unistd.h>
 
+#include <iostream>
+#include <string>
+
 #include "bluetooth_sender.hpp"
 #include "controller_input.hpp"
 #include "wifi_sender.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
+    const char* config_path = "config/controller_id.yaml";
+    if (argc == 3 && std::string(argv[1]) == "--config") {
+        config_path = argv[2];
+    } else if (argc != 1) {
+        std::cerr << "使い方: controller_sender [--config path]\n";
+        return 1;
+    }
+
+    ControllerMapping mapping{};
+    if (!load_controller_mapping(config_path, mapping)) {
+        return 1;
+    }
+
     constexpr const char* controller_device = "/dev/input/js0";
     constexpr const char* wifi_address = "192.168.1.100";
     constexpr uint16_t wifi_port = 5000;
@@ -37,7 +53,7 @@ int main()
     ControllerData data{};
 
     while (true) {
-        if (update_controller(controller_fd, data)) {
+        if (update_controller(controller_fd, mapping, data)) {
             send_wifi(wifi_fd, data);
             send_bluetooth(bluetooth_fd, data);
         }
