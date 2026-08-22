@@ -654,6 +654,38 @@ Receiver側で必要に応じて以下を行う。
                   ↓
              ControllerData
                   ↓
-                ROS 2
+                ROS 2 (sensor_msgs/msg/Joy)
 
 Senderは「取得して送る」ことに専念し、Receiver側で入力データを必要な形式へ変換する。
+
+---
+
+# ビルド・実行コマンド一覧（Root Makefile）
+
+リポジトリ直下の `Makefile` から各種ビルド・起動を実行できます。
+
+### 1. ビルド
+- **Senderのみビルド:**
+  ```bash
+  make sender
+  ```
+- **Receiver & ROS 2をビルド:**
+  ```bash
+  make receiver-ros2
+  ```
+
+### 2. 実行
+- **単体 Receiver（受信のみ）の起動:**
+  ```bash
+  make run-receiver
+  ```
+- **ROS 2 ノード（Joy変換・Publish）の起動:**
+  ```bash
+  make launch
+  ```
+
+### 3. クリーン
+- **全ビルド成果物の削除:**
+  ```bash
+  make clean
+  ```

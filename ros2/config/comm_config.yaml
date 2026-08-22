@@ -1,0 +1,16 @@
+# ROS2 communication configuration
+
+# Communication priority (first is preferred)
+priority:
+  - wifi
+  - bluetooth
+
+# RSSI thresholds (dBm). When the signal is below *bad_rssi* the link is considered bad.
+# When it rises above *recover_rssi* the link is considered recovered.
+thresholds:
+  wifi:
+    bad_rssi: -80
+    recover_rssi: -70
+  bluetooth:
+    bad_rssi: -85
+    recover_rssi: -75
