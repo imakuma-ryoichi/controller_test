@@ -51,11 +51,14 @@ void receive_wifi()
             continue;
         }
 
-        std::cout
-            << "[Wi-Fi] "
-            << "x=" << data.x
-            << " y=" << data.y
-            << " rotation=" << data.rotation
-            << '\n';
+        std::cout << "[Wi-Fi] axes=";
+        for (const int32_t value : data.axes) {
+            std::cout << value << ' ';
+        }
+        std::cout << "buttons=";
+        for (const int32_t value : data.buttons) {
+            std::cout << value << ' ';
+        }
+        std::cout << '\n';
     }
 }

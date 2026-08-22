@@ -120,17 +120,18 @@ Senderでは/dev/input/eventXを直接使用せず、/dev/input/jsXからコン�
 
 # ControllerData
 
-ControllerDataにはコントローラーの軸とボタンの現在状態を保持する。
+ControllerDataにはコントローラーの13入力の現在状態を保持する。
 
 軸：
 
-    axes[]
+    axes[6] : 左スティックXY、右スティックXY、L2、R2
 
 ボタン：
 
-    buttons[]
+    buttons[7] : 十字キーなどのオン/オフ入力
 
-Linux Joystick APIから受信した生データをそのまま保持する。
+`axes[]` はLinux Joystick APIの生の`int32_t`値を保持し、L2/R2の入力加減も含む。
+`buttons[]` は押下を1、離上を0として保持する。
 
 値の正規化やデッドゾーン処理は行わない。
 

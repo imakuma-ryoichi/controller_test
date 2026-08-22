@@ -1,10 +1,10 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 struct ControllerData
 {
-    int32_t x{};
-    int32_t y{};
-    int32_t rotation{};
+    std::array<int32_t, 6> axes{};
+    std::array<int32_t, 7> buttons{};
 };
