@@ -1,6 +1,6 @@
 # Controller Communication System
 
-対応コントローラーの入力をLinux Joystick APIから取得し、生データのまま100 Hzで送信するシステム（例: PS5 DualSense Controller）。
+対応コントローラーの入力をLinux Joystick APIから取得し、生データのまま設定周期で送信するシステム（例: PS5 DualSense Controller）。
 
 SenderとReceiverを分離し、Senderでは入力取得と通信のみを担当する。
 
@@ -21,7 +21,7 @@ ReceiverではWi-FiおよびBluetoothからデータを受信し、最終的にR
           ↓
     ControllerData
           │
-       100 Hz
+       設定周期
           │
       ┌───┴───┐
       ↓       ↓
@@ -89,7 +89,7 @@ Senderは以下のみを担当する。
 2. Linux Joystick APIから全入力イベントを取得
 3. 現在の全入力状態を保持
 4. ControllerDataにまとめる
-5. 100 Hzで送信
+5. 設定周期で送信
 
 Senderでは入力値の意味付けや加工を行わない。
 
@@ -141,15 +141,16 @@ ControllerDataにはコントローラーの14入力の現在状態を保持す�
 
 # 送信周期
 
-送信周波数は100 Hz。
+送信周波数は`controller_sender/config/controller_id.yaml`の`send_rate_hz`で設定する。
+既定値は100 Hz。
 
     1000 ms ÷ 100 Hz = 10 ms
 
-したがって10 ms周期でControllerData全体を送信する。
+既定値では10 ms周期でControllerData全体を送信する。
 
 入力イベントが発生するたびに送信する方式ではない。
 
-入力イベントを読み続けて現在状態を更新し、10 msごとにその時点の全入力状態をまとめて送信する。
+入力イベントを読み続けて現在状態を更新し、設定周期ごとにその時点の全入力状態をまとめて送信する。
 
 ---
 
@@ -278,7 +279,7 @@ DualSenseのスティック、トリガー、ボタンなどを操作し、入�
 
     controller_sender/config/controller_id.yaml
 
-コントローラーのデバイス、ReceiverのIPアドレス、ポートなどの通信設定は`src/main.cpp`で設定する。
+コントローラーのデバイス、ReceiverのIPアドレス、ポートなどの通信設定は`config/controller_connection.yaml`で設定する。
 
 ---
 
@@ -596,7 +597,7 @@ Sender：
         ↓
     ControllerData
         ↓
-    100 Hz
+    設定周期
         ↓
     Wi-Fi / Bluetooth
 
@@ -642,7 +643,7 @@ Receiver側で必要に応じて以下を行う。
           ↓
     ControllerData
           ↓
-         100 Hz
+         設定周期
           ├──────────────┐
           ↓              ↓
         Wi-Fi        Bluetooth
@@ -654,6 +655,42 @@ Receiver側で必要に応じて以下を行う。
                   ↓
              ControllerData
                   ↓
-                ROS 2
+                ROS 2 (sensor_msgs/msg/Joy)
 
 Senderは「取得して送る」ことに専念し、Receiver側で入力データを必要な形式へ変換する。
+
+---
+
+# ビルド・実行コマンド一覧（Root Makefile）
+
+リポジトリ直下の `Makefile` から各種ビルド・起動を実行できます。
+
+### 1. ビルド
+- **Senderのみビルド:**
+  ```bash
+  make sender
+  ```
+- **Receiver & ROS 2をビルド:**
+  ```bash
+  make receiver-ros2
+  ```
+
+### 2. 実行
+- **単体 Receiver（受信のみ）の起動:**
+  ```bash
+  make run-receiver
+  ```
+- **ROS 2 ノード（Joy変換・Publish）の起動:**
+  ```bash
+  make launch
+  ```
+
+ROS 2ノードは`/controller/joy`へ`sensor_msgs/msg/Joy`をPublishします。
+Wi-Fi/Bluetoothの優先順位と無通信タイムアウトは`ros2/config/comm_config.yaml`で設定します。
+受信ポートとRFCOMMチャンネルは`controller_receiver/config/receiver_connection.yaml`を使います。
+
+### 3. クリーン
+- **全ビルド成果物の削除:**
+  ```bash
+  make clean
+  ```

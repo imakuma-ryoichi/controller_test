@@ -28,3 +28,6 @@ button:
 touchpad:
   event_device: /dev/input/event11
   button_code: 272 # BTN_LEFT (EV_KEY)
+
+# Periodic transmission rate in Hz (default: 100)
+send_rate_hz: 100
