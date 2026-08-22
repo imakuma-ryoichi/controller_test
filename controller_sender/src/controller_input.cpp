@@ -8,21 +8,6 @@
 #include <cstring>
 #include <iostream>
 
-namespace
-{
-enum class Axis : uint8_t
-{
-    LeftX = 0,
-    LeftY = 1,
-    RightX = 2,
-    RightY = 3,
-    LeftTrigger = 4,
-    RightTrigger = 5,
-    DPadX = 6,
-    DPadY = 7
-};
-}
-
 int open_controller(const char* device)
 {
     const int fd = open(device, O_RDONLY | O_NONBLOCK);
@@ -53,7 +38,7 @@ bool update_controller(int controller_fd, ControllerData& data)
 
         case JS_EVENT_BUTTON:
             if (event.number < data.buttons.size()) {
-                data.buttons[event.number] = event.value;
+                data.buttons[event.number] = static_cast<uint8_t>(event.value);
                 updated = true;
             }
             break;
