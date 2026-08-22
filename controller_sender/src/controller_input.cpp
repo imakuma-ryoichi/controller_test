@@ -1,12 +1,27 @@
 #include "controller_input.hpp"
 
 #include <fcntl.h>
-#include <linux/input.h>
+#include <linux/joystick.h>
 #include <unistd.h>
 
 #include <cerrno>
 #include <cstring>
 #include <iostream>
+
+namespace
+{
+enum class Axis : uint8_t
+{
+    LeftX = 0,
+    LeftY = 1,
+    RightX = 2,
+    RightY = 3,
+    LeftTrigger = 4,
+    RightTrigger = 5,
+    DPadX = 6,
+    DPadY = 7
+};
+}
 
 int open_controller(const char* device)
 {
@@ -23,27 +38,24 @@ int open_controller(const char* device)
 bool update_controller(int controller_fd, ControllerData& data)
 {
     bool updated = false;
-    input_event event{};
+    js_event event{};
 
     while (read(controller_fd, &event, sizeof(event)) == sizeof(event)) {
-        if (event.type != EV_ABS) {
-            continue;
-        }
+        event.type &= ~JS_EVENT_INIT;
 
-        switch (event.code) {
-        case ABS_X:
-            data.x = event.value;
-            updated = true;
+        switch (event.type) {
+        case JS_EVENT_AXIS:
+            if (event.number < data.axes.size()) {
+                data.axes[event.number] = event.value;
+                updated = true;
+            }
             break;
 
-        case ABS_Y:
-            data.y = event.value;
-            updated = true;
-            break;
-
-        case ABS_RX:
-            data.rotation = event.value;
-            updated = true;
+        case JS_EVENT_BUTTON:
+            if (event.number < data.buttons.size()) {
+                data.buttons[event.number] = event.value;
+                updated = true;
+            }
             break;
 
         default:
